@@ -56,6 +56,11 @@ export default function Profile() {
     senha: true
   });
 
+  const [values, setValues] = React.useState({
+    name: "Admin",
+    email: "admin@admin",
+  });
+
   const handleEdit = (field) => {
     setDisabled({ ...disabled, [field]: !disabled[field] });
   }
@@ -99,15 +104,17 @@ export default function Profile() {
             label="Nome"
             variant="outlined"
             margin="normal"
-            value={"Admin"}
+            value={values.name}
+            onChange={(e) => setValues({ ...values, name: e.target.value })}
           />
           <TextField
             id="email"
             label="Email"
             variant="outlined"
             margin="normal"
-            value={"admin@admin"}
+            value={values.email}
             disabled={disabled.email}
+            onChange={(e) => setValues({ ...values, email: e.target.value })}
             slotProps={{
               input: {
                 endAdornment: <InputAdornment position="end" sx={{ cursor: 'pointer' }} onClick={() => handleEdit('email')}><Edit /></InputAdornment>,
@@ -120,7 +127,6 @@ export default function Profile() {
             type="password"
             variant="outlined"
             margin="normal"
-            value={"12345"}
             disabled={disabled.senha}
             slotProps={{
               input: {
