@@ -1,4 +1,5 @@
 import * as React from 'react';
+import axios from 'axios';
 import { useAuth } from '../../contexts/AuthContext';
 import { styled } from '@mui/material/styles';
 import { TextField, Typography, Box, Divider, Grid2 as Grid } from '@mui/material';
@@ -89,7 +90,7 @@ const StyledSubmit = styled('input')(({ theme }) => ({
   }
 }));
 
-const handleSubmit = (e, login, isLogin, navigate, location) => {
+const handleSubmit = async (e, login, isLogin, navigate, location) => {
   e.preventDefault();
   const redirectTo = location.state?.from?.pathname || "/";
   const username = e.target.email.value;
@@ -100,16 +101,23 @@ const handleSubmit = (e, login, isLogin, navigate, location) => {
       toast.warn('Preencha todos os campos!');
       return;
     }
-    if (username === 'admin@admin' && password === '12345') {
-      login();
+
+    try {
+      const response = await axios.post('http://localhost:3000/auth/login', {
+        email: username,
+        password: password,
+      });
+      const { access_token } = response.data;
+      
+      login(access_token);
       navigate(redirectTo, { replace: true });
       toast.success('Login efetuado com sucesso!');
-    } else {
+    } catch (error) {
       toast.error('Email ou senha inválidos!');
-      return;
     }
   } else {
     const confirmPassword = e.target.confirmPassword.value;
+    const name = e.target.name.value;
 
     if (!username || !password || !confirmPassword) {
       toast.warn('Preencha todos os campos!');
@@ -119,9 +127,17 @@ const handleSubmit = (e, login, isLogin, navigate, location) => {
       toast.warn('As senhas não coincidem!');
       return;
     }
-    login();
-    navigate(redirectTo, { replace: true });
-    toast.success('Conta criada com sucesso!');
+
+    try {
+      await axios.post('http://localhost:3000/users', {
+        name: name,
+        email: username,
+        password: password,
+      });
+      handleSubmit(e, login, true, navigate, location);
+    } catch (error) {
+      toast.error('Erro ao criar a conta.');
+    }
   }
 };
 

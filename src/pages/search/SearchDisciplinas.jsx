@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { styled } from '@mui/material';
-import BasicModal from '../../components/search/OutsideModal';
+import CardSubject from '../../components/search/CardSubject';
 
 const ContainerSearch = styled('div')(({ theme }) => ({
   minHeight: '100vh',
@@ -15,7 +15,7 @@ const ContainerSearch = styled('div')(({ theme }) => ({
 export default function SearchDisciplinas() {
   return (
     <ContainerSearch>
-      <BasicModal />
+      <CardSubject />
     </ContainerSearch>
   );
 }
