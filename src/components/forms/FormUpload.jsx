@@ -92,7 +92,7 @@ const StyledSubmit = styled('input')(() => ({
 const handleSubmit = (e, typeForm) => {
   e.preventDefault();
 
-  if (typeForm === 'disciplina') {
+  if (typeForm === 'subject') {
     const disciplina = e.target.disciplina.value;
     const codigo = e.target.codigo.value;
     const professor = e.target.professor.value;

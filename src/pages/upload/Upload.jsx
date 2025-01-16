@@ -55,7 +55,7 @@ const fieldsMaterial = [
 ];
 
 export default function Upload() {
-  const [toggleValue, setToggleValue] = React.useState('disciplina');
+  const [toggleValue, setToggleValue] = React.useState('subject');
 
   return (
     <ContainerUpload>
@@ -72,7 +72,7 @@ export default function Upload() {
           />
         </Grid>
         <Grid item size={12} sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          {toggleValue === 'disciplina' ? <FormUpload typeForm={toggleValue} fields={fieldsMaterial} /> : <FormUpload typeForm={toggleValue} fields={fieldsLivro} />}
+          {toggleValue === 'subject' ? <FormUpload typeForm={toggleValue} fields={fieldsMaterial} /> : <FormUpload typeForm={toggleValue} fields={fieldsLivro} />}
         </Grid>
       </Grid>
     </ContainerUpload>

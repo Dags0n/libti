@@ -37,8 +37,8 @@ export default function SelectionToggleButton({ value, onChange }) {
       onChange={onChange}
       aria-label="Platform"
     >
-      <StyledToggleButton value="disciplina">Disciplina</StyledToggleButton>
-      <StyledToggleButton value="livro">Livro</StyledToggleButton>
+      <StyledToggleButton value="subject">Disciplina</StyledToggleButton>
+      <StyledToggleButton value="books">Livro</StyledToggleButton>
     </ToggleButtonGroup>
   );
 }

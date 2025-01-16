@@ -40,7 +40,7 @@ MyFormControlLabel.propTypes = {
 export default function RadioFilter() {
   const navigate = useNavigate();
   const { filter } = useParams();
-  const defaultFilter = filter || "disciplina";
+  const defaultFilter = filter || "subject";
 
   const handleRadioChange = (event) => {
     const selectedValue = event.target.value;
@@ -53,8 +53,8 @@ export default function RadioFilter() {
       value={defaultFilter}
       onChange={handleRadioChange}
     >
-      <MyFormControlLabel value="disciplina" label="Disciplinas" control={<Radio />} />
-      <MyFormControlLabel value="livro" label="Livros" control={<Radio />} />
+      <MyFormControlLabel value="subject" label="Disciplinas" control={<Radio />} />
+      <MyFormControlLabel value="books" label="Livros" control={<Radio />} />
     </RadioGroup>
   );
 }

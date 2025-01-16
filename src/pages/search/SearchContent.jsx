@@ -8,8 +8,8 @@ export default function SearchContent() {
 
   return (
     <div>
-      {filter === "disciplina" && <SearchDisciplinas />}
-      {filter === "livro" && <SearchLivros />}
+      {filter === "subject" && <SearchDisciplinas />}
+      {filter === "books" && <SearchLivros />}
     </div>
   );
 }
