@@ -44,12 +44,12 @@ export default function SearchButton() {
 
   const filteredOptions =
     inputValue.length >= 3
-      ? results.map((option) => option.title)
+      ? results.map((option) => option.title ?? option.name)
       : [];
 
-  const fetchBooks = async (input) => {
+  const fetchBooks = async (toggleValue, input) => {
     try {
-      const response = await axios.get(`http://localhost:3000/books/search/${input}`);
+      const response = await axios.get(`http://localhost:3000/${toggleValue}/search/${input}`);
       setResults(response.data);
     } catch (error) {
       console.error("Erro ao buscar livros:", error);
@@ -60,9 +60,9 @@ export default function SearchButton() {
 
   useEffect(() => {
     if (inputValue.length >= 3) {
-      debouncedFetchBooks(inputValue);
+      debouncedFetchBooks(toggleValue, inputValue);
     }
-  }, [inputValue, debouncedFetchBooks]);
+  }, [inputValue, debouncedFetchBooks, toggleValue]);
 
   const handleSearch = async (event) => {
     event.preventDefault();
