@@ -62,7 +62,7 @@ export default function SearchButton() {
     if (inputValue.length >= 3) {
       debouncedFetchBooks(inputValue);
     }
-  }, [inputValue])
+  }, [inputValue, debouncedFetchBooks]);
 
   const handleSearch = async (event) => {
     event.preventDefault();

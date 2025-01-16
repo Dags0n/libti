@@ -7,16 +7,6 @@ import Typography from "@mui/material/Typography";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 
-import cleanArch from "../../assets/books/clean-arch.png";
-import cleanCode from "../../assets/books/clean-code.png";
-import felicidade from "../../assets/books/felicidade.png";
-import calculo from "../../assets/books/calculo.png";
-import so from "../../assets/books/so.png";
-import redes from "../../assets/books/redes.png";
-import algoritmos from "../../assets/books/algoritmos.png";
-import archComp from "../../assets/books/arq-comp.png";
-
-
 export default function BookCards() {
   const [books, setBooks] = useState([]);
   const filter = useLocation().search.replace("?", "");
@@ -26,7 +16,7 @@ export default function BookCards() {
     axios.get(`http://localhost:3000/books${query}`).then((response) => {
       setBooks(response.data);
     });
-  }, [filter]);
+  }, [filter, query]);
   return (
     <Grid container spacing={3} sx={{ padding: 2 }}>
       {books.map((book, index) => (
