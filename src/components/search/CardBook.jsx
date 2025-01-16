@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Grid2 as Grid } from "@mui/material";
 import Card from "@mui/material/Card";
 import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
+import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 import cleanArch from "../../assets/books/clean-arch.png";
 import cleanCode from "../../assets/books/clean-code.png";
@@ -14,50 +16,17 @@ import redes from "../../assets/books/redes.png";
 import algoritmos from "../../assets/books/algoritmos.png";
 import archComp from "../../assets/books/arq-comp.png";
 
-const books = [
-  {
-    title: "Arquitetura Limpa",
-    author: "Robert C. Martin",
-    image: cleanArch,
-  },
-  {
-    title: "A Felicidade é Inútil",
-    author: "Clóvis de Barros Filho",
-    image: felicidade,
-  },
-  {
-    title: "Cálculo 1",
-    author: "Hamilton L. Guidorizzi",
-    image: calculo,
-  },
-  {
-    title: "Arquitetura de Computadores",
-    author: "John L. Hennessy",
-    image: archComp,
-  },
-  {
-    title: "Rede de Computadores",
-    author: "José Gouveia",
-    image: redes,
-  },
-  {
-    title: "Código Limpo",
-    author: "Robert C. Martin",
-    image: cleanCode,
-  },
-  {
-    title: "Sistemas Operacionais",
-    author: "Andrew S. Tanenbaum",
-    image: so,
-  },
-  {
-    title: "Algoritmos",
-    author: "Thomas T. Cormen",
-    image: algoritmos,
-  },
-];
 
 export default function BookCards() {
+  const [books, setBooks] = useState([]);
+  const filter = useLocation().search.replace("?", "");
+  const query = filter ? `/search/${filter}` : "";
+  
+  useEffect(() => {
+    axios.get(`http://localhost:3000/books${query}`).then((response) => {
+      setBooks(response.data);
+    });
+  }, [filter]);
   return (
     <Grid container spacing={3} sx={{ padding: 2 }}>
       {books.map((book, index) => (

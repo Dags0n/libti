@@ -69,7 +69,7 @@ export default function SearchButton() {
 
     if (inputValue.length < 3) return;
 
-    window.location.href = `http://localhost:3000/${toggleValue}/search/${inputValue}`;
+    window.location.href = `/search/${toggleValue}?${inputValue}`;
   };
 
   return (

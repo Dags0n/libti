@@ -50,7 +50,7 @@ export default function ButtonSearch() {
 
   const handleSearch = () => {
     if (!filter) return;
-    navigate(`/search/${filter || 'disciplina'}?${search}`);
+    navigate(`/search/${filter}?${search}`);
   };
 
   return (
