@@ -46,7 +46,7 @@ const StyledTypography = styled(Typography)(({ theme }) => ({
 }));
 
 export default function Requests() {
-  const [toggleValue, setToggleValue] = React.useState('disciplina');
+  const [toggleValue, setToggleValue] = React.useState('subject');
 
   return (
     <ContainerRequests>
@@ -60,7 +60,7 @@ export default function Requests() {
         }}
       />
       <ContainerItemsRequests>
-        {toggleValue === 'disciplina' ? <CardRequests /> : <CardRequestsLivros />}
+        {toggleValue === 'subject' ? <CardRequests /> : <CardRequestsLivros />}
       </ContainerItemsRequests>
     </ContainerRequests>
   );
