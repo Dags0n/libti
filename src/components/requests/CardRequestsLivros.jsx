@@ -38,20 +38,21 @@ export default function CardRequests() {
     fetchRequests();
   }, []);
 
-  const handleAcceptRequest = (id) => {
+  const handleAcceptRequest = (request) => {
     try {
-      axios.put(`http://localhost:3005/requests-books/${id}/status`, { status: 'accepted' });
-      toast.success(`Request ${id} aceito!`);
+      axios.put(`http://localhost:3005/requests-books/${request.id}/status`, { status: 'accepted' });
+      axios.post(`http://localhost:3005/books`, request.uploadBook);
+      toast.success(`Request ${request.id} aceito!`);
     } catch (error) {
       console.error('Erro ao aceitar o request:', error);
       toast.error('Erro ao aceitar o request.');
     }
   };
 
-  const handleRejectRequest = (id) => {
+  const handleRejectRequest = (request) => {
     try {
-      axios.put(`http://localhost:3005/requests-books/${id}/status`, { status: 'rejected' });
-      toast.error(`Request ${id} rejeitado!`);
+      axios.put(`http://localhost:3005/requests-books/${request.id}/status`, { status: 'rejected' });
+      toast.error(`Request ${request.id} rejeitado!`);
     } catch (error) {
       console.error('Erro ao rejeitar o request:', error);
       toast.error('Erro ao rejeitar o request.');
@@ -118,10 +119,10 @@ function Row({ request, onAccept, onReject }) {
         <TableCell>
           <FontAwesomeIcon
             icon={faCircleCheck}
-            style={{ color: 'green', height: '25px', cursor: 'pointer', marginRight: '10px' }}
+            style={{ color: status === 'pending' ? 'green' : 'gray', height: '25px', cursor: 'pointer', marginRight: '10px' }}
             onClick={() => {
                 if (request.status === 'pending' && status === 'pending') {
-                  onAccept(id);
+                  onAccept(request);
                   setStatus('accepted');
                 }
               }
@@ -129,10 +130,10 @@ function Row({ request, onAccept, onReject }) {
           />
           <FontAwesomeIcon
             icon={faCircleXmark}
-            style={{ color: 'red', height: '25px', cursor: 'pointer' }}
+            style={{ color: status === 'pending' ? 'red' : 'gray', height: '25px', cursor: 'pointer' }}
             onClick={() => {
                 if (request.status === 'pending' && status === 'pending') {
-                  onReject(id);
+                  onReject(request);
                   setStatus('rejected');
                 }
               }

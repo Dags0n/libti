@@ -38,20 +38,21 @@ export default function CardRequestsSubjects() {
     fetchRequests();
   }, []);
 
-  const handleAcceptRequest = (id) => {
+  const handleAcceptRequest = (request) => {
     try {
-      axios.put(`http://localhost:3005/requests-subjects/${id}/status`, { status: 'accepted' });
-      toast.success(`Request ${id} aceito!`);
+      axios.put(`http://localhost:3005/requests-subjects/${request.id}/status`, { status: 'accepted' });
+      axios.post(`http://localhost:3005/subject`, request.uploadSubject);
+      toast.success(`Request ${request.id} aceito!`);
     } catch (error) {
       console.error('Erro ao aceitar o request:', error);
       toast.error('Erro ao aceitar o request.');
     }
   };
 
-  const handleRejectRequest = (id) => {
+  const handleRejectRequest = (request) => {
     try {
-      axios.put(`http://localhost:3005/requests-subjects/${id}/status`, { status: 'rejected' });
-      toast.error(`Request ${id} rejeitado!`);
+      axios.put(`http://localhost:3005/requests-subjects/${request.id}/status`, { status: 'rejected' });
+      toast.error(`Request ${request.id} rejeitado!`);
     } catch (error) {
       console.error('Erro ao rejeitar o request:', error);
       toast.error('Erro ao rejeitar o request.');
@@ -96,7 +97,7 @@ export default function CardRequestsSubjects() {
 
 function Row({ request, onAccept, onReject }) {
   const [open, setOpen] = useState(false);
-  const { id, subjectDetails, requester } = request;
+  const { id, uploadSubject, requester } = request;
   const [status, setStatus] = useState(request.status);
 
   return (
@@ -113,15 +114,15 @@ function Row({ request, onAccept, onReject }) {
         </TableCell>
         <TableCell>{id}</TableCell>
         <TableCell>{requester?.name || 'Desconhecido'}</TableCell>
-        <TableCell>{subjectDetails?.name || 'Disciplina não fornecida'}</TableCell>
+        <TableCell>{uploadSubject?.name || 'Disciplina não fornecida'}</TableCell>
         <TableCell>{status}</TableCell>
         <TableCell>
           <FontAwesomeIcon
             icon={faCircleCheck}
-            style={{ color: 'green', height: '25px', cursor: 'pointer', marginRight: '10px' }}
+            style={{ color: status === 'pending' ? 'green' : 'gray', height: '25px', cursor: 'pointer', marginRight: '10px' }}
             onClick={() => {
                 if (request.status === 'pending' && status === 'pending') {
-                  onAccept(id)
+                  onAccept(request)
                   setStatus('accepted')
                 }
               }
@@ -129,10 +130,10 @@ function Row({ request, onAccept, onReject }) {
           />
           <FontAwesomeIcon
             icon={faCircleXmark}
-            style={{ color: 'red', height: '25px', cursor: 'pointer' }}
+            style={{ color: status === 'pending' ? 'red' : 'gray', height: '25px', cursor: 'pointer' }}
             onClick={() => {
                 if (request.status === 'pending' && status === 'pending') {
-                  onReject(id)
+                  onReject(request)
                   setStatus('rejected')
                 }
               }
@@ -147,26 +148,26 @@ function Row({ request, onAccept, onReject }) {
               <Typography variant="h6" gutterBottom>
                 Detalhes do Request
               </Typography>
-              {subjectDetails ? (
+              {uploadSubject ? (
                 <Table size="small" aria-label="subject-details">
                   <TableBody>
                     <TableRow>
                       <TableCell>Nome</TableCell>
-                      <TableCell>{subjectDetails.name || 'N/A'}</TableCell>
+                      <TableCell>{uploadSubject.name || 'N/A'}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Professor</TableCell>
-                      <TableCell>{subjectDetails.professor || 'N/A'}</TableCell>
+                      <TableCell>{uploadSubject.professor || 'N/A'}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Semestre</TableCell>
-                      <TableCell>{subjectDetails.semester || 'N/A'}</TableCell>
+                      <TableCell>{uploadSubject.semester || 'N/A'}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Link</TableCell>
                       <TableCell>
-                        <a href={subjectDetails.link} target="_blank" rel="noopener noreferrer">
-                          {subjectDetails.link || 'N/A'}
+                        <a href={uploadSubject.link} target="_blank" rel="noopener noreferrer">
+                          {uploadSubject.link || 'N/A'}
                         </a>
                       </TableCell>
                     </TableRow>
