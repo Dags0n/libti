@@ -3,13 +3,15 @@ import { styled } from '@mui/material/styles';
 import { TextField, Box, Grid2 as Grid } from '@mui/material';
 import InputFile from './InputFile';
 import { toast } from 'react-toastify';
+import { useCookies } from 'react-cookie';
+import axios from 'axios';
 
 function FormTextField(id, label, type) {
   if (type === 'file') {
-    return <InputFile label={label} id={id} />;
+    return <InputFile label={label} id={id} key={id} />;
   }
   return (
-    <Box sx={{ width: '100%', marginBottom: 3 }}>
+    <Box sx={{ width: '100%', marginBottom: 3 }} key={id}>
       <StyledTextField fullWidth type={type} label={label} id={id} />
     </Box>
   );
@@ -89,7 +91,7 @@ const StyledSubmit = styled('input')(() => ({
   }
 }));
 
-const handleSubmit = (e, typeForm) => {
+const handleSubmit = async (e, typeForm, cookies) => {
   e.preventDefault();
 
   if (typeForm === 'subject') {
@@ -103,25 +105,71 @@ const handleSubmit = (e, typeForm) => {
       toast.warn('Preencha todos os campos obrigatórios!');
       return;
     }
-    toast.success('Requisição enviada com sucesso!');
-  } else {
+
+    try {
+      await axios.post('http://localhost:3005/upload-subjects', {
+        name: disciplina,
+        code: codigo,
+        teacher: professor,
+        semester: semestre,
+        fileLink: linkArquivos,
+        user: cookies.userId,
+      });
+
+      e.target.reset();
+      toast.success('Requisição enviada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar requisição:', error);
+      toast.error('Erro ao enviar requisição.');
+    }
+  } else if (typeForm === 'books') {
     const nomeLivro = e.target.nomeLivro.value;
     const linkDownload = e.target.linkDownload.value;
+    const autor = e.target.autor.value;
+    const editora = e.target.editora.value;
+    const anoPublicacao = e.target.anoPublicacao.value;
+    const edicao = e.target.edicao.value;
+    const isbn = e.target.isbn.value;
 
     if (!nomeLivro || !linkDownload) {
       toast.warn('Preencha todos os campos obrigatórios!');
       return;
     }
-    toast.success('Requisição enviada com sucesso!');
+
+    const bookData = {
+      title: nomeLivro,
+      author: autor,
+      edition: edicao,
+      publisher: editora,
+      yearPublication: anoPublicacao,
+      isbn: isbn,
+      link: linkDownload,
+      user: cookies.userId,
+    };
+
+    try {
+      await axios.post('http://localhost:3005/upload-books', bookData, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      e.target.reset();
+      toast.success('Requisição enviada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar requisição:', error);
+      toast.error('Erro ao enviar requisição.');
+    }
   }
-}
+};
 
 export function FormUpload({ fields, typeForm }) {
+  const [cookies] = useCookies(['userId']);
   return (
     <DivForm>
       <ContainerUploadForm>
         <Grid container>
-          <StyledForm onSubmit={(e) => handleSubmit(e, typeForm)}>
+          <StyledForm onSubmit={(e) => handleSubmit(e, typeForm, cookies)}>
             {fields.map((field) => FormTextField(field.id, field.label, field.type))}
             <StyledSubmit type='submit' value='Enviar Requisição' />
           </StyledForm>

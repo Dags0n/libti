@@ -6,18 +6,26 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [cookies, setCookie, removeCookie] = useCookies(["access_token"]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState(null);
 
-  const login = (token) => {
+  const login = (token, userId) => {
     setCookie("access_token", token, { 
       path: '/', 
       maxAge: 3600,
     });
+    setCookie("userId", userId, {
+      path: '/',
+      maxAge: 3600,
+    });
     setIsAuthenticated(true);
+    setUserId(userId);
   };
 
   const logout = () => {
     removeCookie("access_token", { path: '/' });
+    removeCookie("userId", { path: '/' });
     setIsAuthenticated(false);
+    setUserId(null);
   };
 
   useEffect(() => {
@@ -27,7 +35,7 @@ export const AuthProvider = ({ children }) => {
   }, [cookies]);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ userId, isAuthenticated, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -108,8 +108,10 @@ const handleSubmit = async (e, login, isLogin, navigate, location) => {
         password: password,
       });
       const { access_token } = response.data;
+
+      const user = await axios.get('http://localhost:3005/users/email/' + username);
       
-      login(access_token);
+      login(access_token, user.data.id);
       navigate(redirectTo, { replace: true });
       toast.success('Login efetuado com sucesso!');
     } catch (error) {

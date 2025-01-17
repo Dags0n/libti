@@ -40,8 +40,8 @@ const fieldsLivro = [
   { id: 'linkDownload', label: 'Link para Download *', type: 'text' },
   { id: 'autor', label: 'Autor', type: 'text' },
   { id: 'editora', label: 'Editora', type: 'text' },
-  { id: 'anoPublicacao', label: 'Ano de Publicação', type: 'number' },
-  { id: 'edicao', label: 'Edição', type: 'number' },
+  { id: 'anoPublicacao', label: 'Ano de Publicação', type: 'text' },
+  { id: 'edicao', label: 'Edição', type: 'text' },
   { id: 'isbn', label: 'ISBN', type: 'text' },
 ];
 
@@ -51,7 +51,6 @@ const fieldsMaterial = [
   { id: 'professor', label: 'Professor *', type: 'text' },
   { id: 'semestre', label: 'Semestre *', type: 'text' },
   { id: 'linkArquivos', label: 'Link para Arquivos *', type: 'text' },
-  { id: 'conteudoDisciplina', label: 'Anexar Conteúdo da Disciplina *', type: 'file' },
 ];
 
 export default function Upload() {
