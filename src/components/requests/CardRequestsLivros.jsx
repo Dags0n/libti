@@ -1,5 +1,4 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Collapse,
@@ -11,62 +10,98 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Paper
+  Paper,
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
-  KeyboardArrowUp as KeyboardArrowUpIcon
+  KeyboardArrowUp as KeyboardArrowUpIcon,
 } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
-function createData(isbn, nomeLivro, userEnvio) {
-  return {
-    isbn,
-    nomeLivro,
-    userEnvio,
-    informacoes: [
-      {
-        data: '2020-01-05',
-        autor: 'Dagson Gabriel',
-        editora: 'Editora 1',
-        anoPublicacao: '2021',
-        link: 'drive.google.com/web1_2021.1',
-      },
-      {
-        data: '2020-01-02',
-        autor: 'Alesandro Alex',
-        editora: 'Editora 1',
-        anoPublicacao: '2021',
-        link: 'drive.google.com/web1_2021.1',
-      },
-      {
-        data: '2020-01-02',
-        autor: 'Erik Medeiros',
-        editora: 'Editora 1',
-        anoPublicacao: '2021',
-        link: 'drive.google.com/web1_2021.1',
-      },
-    ],
+export default function CardRequests() {
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get('http://localhost:3005/requests-books');
+        setRequests(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar os requests:', error);
+        toast.error('Erro ao carregar os requests.');
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  const handleAcceptRequest = (id) => {
+    try {
+      axios.put(`http://localhost:3005/requests-books/${id}/status`, { status: 'accepted' });
+      toast.success(`Request ${id} aceito!`);
+    } catch (error) {
+      console.error('Erro ao aceitar o request:', error);
+      toast.error('Erro ao aceitar o request.');
+    }
   };
-}
 
-const handleAcceptRequest = () => {
-  toast.success('Request aceito!');
-};
-
-const handleRejectRequest = () => {
-  toast.success('Request rejeitado!');
-};
-
-function Row(props) {
-  const { row } = props;
-  const [open, setOpen] = React.useState(false);
+  const handleRejectRequest = (id) => {
+    try {
+      axios.put(`http://localhost:3005/requests-books/${id}/status`, { status: 'rejected' });
+      toast.error(`Request ${id} rejeitado!`);
+    } catch (error) {
+      console.error('Erro ao rejeitar o request:', error);
+      toast.error('Erro ao rejeitar o request.');
+    }
+  };
 
   return (
-    <React.Fragment>
-      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+    <TableContainer component={Paper} sx={{ border: '1px solid #6899E6', boxShadow: 4, borderRadius: '10px' }}>
+      <Table aria-label="collapsible table">
+        <TableHead>
+          <TableRow>
+            <TableCell />
+            <TableCell>ID do Request</TableCell>
+            <TableCell>Solicitante</TableCell>
+            <TableCell>Título do Livro</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Ações</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {requests.length > 0 ? (
+            requests.map((request) => (
+              <Row
+                key={request.id}
+                request={request}
+                onAccept={handleAcceptRequest}
+                onReject={handleRejectRequest}
+              />
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                Nenhum request encontrado.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+function Row({ request, onAccept, onReject }) {
+  const [open, setOpen] = useState(false);
+  const { id, uploadBook, requester } = request;
+  const [status, setStatus] = useState(request.status);
+
+  return (
+    <>
+      <TableRow>
         <TableCell>
           <IconButton
             aria-label="expand row"
@@ -76,31 +111,32 @@ function Row(props) {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell component="th" scope="row">
-          {row.isbn}
-        </TableCell>
-        <TableCell>{row.nomeLivro}</TableCell>
-        <TableCell>{row.userEnvio}</TableCell>
+        <TableCell>{id}</TableCell>
+        <TableCell>{requester?.name || 'Desconhecido'}</TableCell>
+        <TableCell>{uploadBook?.title || 'Nome não fornecido'}</TableCell>
+        <TableCell>{status}</TableCell>
         <TableCell>
           <FontAwesomeIcon
             icon={faCircleCheck}
-            style={{
-              color: 'green',
-              height: '25px',
-              cursor: 'pointer'
-            }}
-            onClick={handleAcceptRequest}
+            style={{ color: 'green', height: '25px', cursor: 'pointer', marginRight: '10px' }}
+            onClick={() => {
+                if (request.status === 'pending' && status === 'pending') {
+                  onAccept(id);
+                  setStatus('accepted');
+                }
+              }
+            }
           />
-        </TableCell>
-        <TableCell>
           <FontAwesomeIcon
             icon={faCircleXmark}
-            style={{
-              color: 'red',
-              height: '25px',
-              cursor: 'pointer'
-            }}
-            onClick={handleRejectRequest}
+            style={{ color: 'red', height: '25px', cursor: 'pointer' }}
+            onClick={() => {
+                if (request.status === 'pending' && status === 'pending') {
+                  onReject(id);
+                  setStatus('rejected');
+                }
+              }
+            }
           />
         </TableCell>
       </TableRow>
@@ -108,88 +144,45 @@ function Row(props) {
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 1 }}>
-              <Typography variant="h6" gutterBottom component="div">
-                Informações
+              <Typography variant="h6" gutterBottom>
+                Detalhes do Request
               </Typography>
-              <Table size="small" aria-label="purchases">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Data</TableCell>
-                    <TableCell>Autor</TableCell>
-                    <TableCell>Link</TableCell>
-                    <TableCell>Editora</TableCell>
-                    <TableCell>Publicação</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {row.informacoes.map((info) => (
-                    <TableRow key={info.data}>
-                      <TableCell component="th" scope="row">
-                        {info.data}
-                      </TableCell>
-                      <TableCell>{info.autor}</TableCell>
-                      <TableCell>{info.link}</TableCell>
-                      <TableCell>{info.editora}</TableCell>
-                      <TableCell>{info.anoPublicacao}</TableCell>
+              {uploadBook ? (
+                <Table size="small" aria-label="book-details">
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Título</TableCell>
+                      <TableCell>{uploadBook.title || 'N/A'}</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </Box>
+                    <TableRow>
+                      <TableCell>Autor</TableCell>
+                      <TableCell>{uploadBook.author || 'N/A'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Editora</TableCell>
+                      <TableCell>{uploadBook.publisher || 'N/A'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Ano de Publicação</TableCell>
+                      <TableCell>{uploadBook.yearPublication || 'N/A'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Link</TableCell>
+                      <TableCell>
+                        <a href={uploadBook.link} target="_blank" rel="noopener noreferrer">
+                          {uploadBook.link}
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              ) : (
+                <Typography variant='span'>Sem informações do request.</Typography>
+              )}
+            </Box>  
           </Collapse>
         </TableCell>
       </TableRow>
-    </React.Fragment>
-  );
-}
-
-Row.propTypes = {
-  row: PropTypes.shape({
-    isbn: PropTypes.string.isRequired,
-    nome: PropTypes.string.isRequired,
-    userEnvio: PropTypes.string.isRequired,
-    informacoes: PropTypes.arrayOf(
-      PropTypes.shape({
-        autor: PropTypes.string.isRequired,
-        editora: PropTypes.string.isRequired,
-        anoPublicacao: PropTypes.string.isRequired,
-        link: PropTypes.string.isRequired,
-        data: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-  }).isRequired,
-};
-
-const rows = [
-  createData('978-85-333-0223-4', 'Livro 1', 'user1'),
-  createData('978-85-333-0223-5', 'Livro 2', 'user2'),
-  createData('978-85-333-0223-6', 'Livro 3', 'user3'),
-  createData('978-85-333-0223-7', 'Livro 4', 'user4'),
-  createData('978-85-333-0223-8', 'Livro 5', 'user5'),
-  createData('978-85-333-0223-9', 'Livro 6', 'user6'),
-  createData('978-85-333-0223-10', 'Livro 7', 'user7'),
-];
-
-export default function CardRequests() {
-  return (
-    <TableContainer component={Paper} sx={{ border: '1px solid #6899E6', boxShadow: 4, borderRadius: '10px' }}>
-      <Table aria-label="collapsible table">
-        <TableHead>
-          <TableRow>
-            <TableCell />
-            <TableCell>ISBN</TableCell>
-            <TableCell>Título</TableCell>
-            <TableCell>Enviado por</TableCell>
-            <TableCell></TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <Row key={row.nome} row={row} />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    </>
   );
 }

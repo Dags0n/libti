@@ -1,5 +1,4 @@
-import * as React from 'react';
-import PropTypes from 'prop-types';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Collapse,
@@ -11,53 +10,98 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Paper
+  Paper,
 } from '@mui/material';
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
-  KeyboardArrowUp as KeyboardArrowUpIcon
+  KeyboardArrowUp as KeyboardArrowUpIcon,
 } from '@mui/icons-material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleCheck, faCircleXmark } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 
-function createData(codigo, disciplina, userEnvio) {
-  return {
-    codigo,
-    disciplina,
-    userEnvio,
-    informacoes: [
-      {
-        data: '2020-01-05',
-        professor: 'Itamir de Morais Barroca Filho',
-        link: 'drive.google.com/web1_2021.1',
-        semestre: '2021.1',
-      },
-      {
-        data: '2020-01-02',
-        professor: 'Janiheryson Felipe de Oliveira Martins',
-        link: 'drive.google.com/web1_2021.1',
-        semestre: '2023.1',
-      },
-    ],
+export default function CardRequestsSubjects() {
+  const [requests, setRequests] = useState([]);
+
+  useEffect(() => {
+    const fetchRequests = async () => {
+      try {
+        const response = await axios.get('http://localhost:3005/requests-subjects');
+        setRequests(response.data);
+      } catch (error) {
+        console.error('Erro ao buscar os requests:', error);
+        toast.error('Erro ao carregar os requests.');
+      }
+    };
+
+    fetchRequests();
+  }, []);
+
+  const handleAcceptRequest = (id) => {
+    try {
+      axios.put(`http://localhost:3005/requests-subjects/${id}/status`, { status: 'accepted' });
+      toast.success(`Request ${id} aceito!`);
+    } catch (error) {
+      console.error('Erro ao aceitar o request:', error);
+      toast.error('Erro ao aceitar o request.');
+    }
   };
-}
 
-const handleAcceptRequest = () => {
-  toast.success('Request aceito!');
-};
-
-const handleRejectRequest = () => {
-  toast.success('Request rejeitado!');
-};
-
-function Row(props) {
-  const { row } = props;
-  const [open, setOpen] = React.useState(false);
+  const handleRejectRequest = (id) => {
+    try {
+      axios.put(`http://localhost:3005/requests-subjects/${id}/status`, { status: 'rejected' });
+      toast.error(`Request ${id} rejeitado!`);
+    } catch (error) {
+      console.error('Erro ao rejeitar o request:', error);
+      toast.error('Erro ao rejeitar o request.');
+    }
+  };
 
   return (
-    <React.Fragment>
-      <TableRow sx={{ '& > *': { borderBottom: 'unset' } }}>
+    <TableContainer component={Paper} sx={{ border: '1px solid #6899E6', boxShadow: 4, borderRadius: '10px' }}>
+      <Table aria-label="collapsible table">
+        <TableHead>
+          <TableRow>
+            <TableCell />
+            <TableCell>ID do Request</TableCell>
+            <TableCell>Solicitante</TableCell>
+            <TableCell>Disciplina</TableCell>
+            <TableCell>Status</TableCell>
+            <TableCell>Ações</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {requests.length > 0 ? (
+            requests.map((request) => (
+              <Row
+                key={request.id}
+                request={request}
+                onAccept={handleAcceptRequest}
+                onReject={handleRejectRequest}
+              />
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={6} align="center">
+                Nenhum request encontrado.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+function Row({ request, onAccept, onReject }) {
+  const [open, setOpen] = useState(false);
+  const { id, subjectDetails, requester } = request;
+  const [status, setStatus] = useState(request.status);
+
+  return (
+    <>
+      <TableRow>
         <TableCell>
           <IconButton
             aria-label="expand row"
@@ -67,31 +111,32 @@ function Row(props) {
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell component="th" scope="row">
-          {row.codigo}
-        </TableCell>
-        <TableCell>{row.disciplina}</TableCell>
-        <TableCell>{row.userEnvio}</TableCell>
+        <TableCell>{id}</TableCell>
+        <TableCell>{requester?.name || 'Desconhecido'}</TableCell>
+        <TableCell>{subjectDetails?.name || 'Disciplina não fornecida'}</TableCell>
+        <TableCell>{status}</TableCell>
         <TableCell>
           <FontAwesomeIcon
             icon={faCircleCheck}
-            style={{
-              color: 'green',
-              height: '25px',
-              cursor: 'pointer'
-            }}
-            onClick={handleAcceptRequest}
+            style={{ color: 'green', height: '25px', cursor: 'pointer', marginRight: '10px' }}
+            onClick={() => {
+                if (request.status === 'pending' && status === 'pending') {
+                  onAccept(id)
+                  setStatus('accepted')
+                }
+              }
+            }
           />
-        </TableCell>
-        <TableCell>
           <FontAwesomeIcon
             icon={faCircleXmark}
-            style={{
-              color: 'red',
-              height: '25px',
-              cursor: 'pointer'
-            }}
-            onClick={handleRejectRequest}
+            style={{ color: 'red', height: '25px', cursor: 'pointer' }}
+            onClick={() => {
+                if (request.status === 'pending' && status === 'pending') {
+                  onReject(id)
+                  setStatus('rejected')
+                }
+              }
+            }
           />
         </TableCell>
       </TableRow>
@@ -99,83 +144,41 @@ function Row(props) {
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={6}>
           <Collapse in={open} timeout="auto" unmountOnExit>
             <Box sx={{ margin: 1 }}>
-              <Typography variant="h6" gutterBottom component="div">
-                Informações
+              <Typography variant="h6" gutterBottom>
+                Detalhes do Request
               </Typography>
-              <Table size="small" aria-label="purchases">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Data</TableCell>
-                    <TableCell>Professor</TableCell>
-                    <TableCell>Link</TableCell>
-                    <TableCell>Semestre</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {row.informacoes.map((info) => (
-                    <TableRow key={info.data}>
-                      <TableCell component="th" scope="row">
-                        {info.data}
-                      </TableCell>
-                      <TableCell>{info.professor}</TableCell>
-                      <TableCell>{info.link}</TableCell>
-                      <TableCell>{info.semestre}</TableCell>
+              {subjectDetails ? (
+                <Table size="small" aria-label="subject-details">
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Nome</TableCell>
+                      <TableCell>{subjectDetails.name || 'N/A'}</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                    <TableRow>
+                      <TableCell>Professor</TableCell>
+                      <TableCell>{subjectDetails.professor || 'N/A'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Semestre</TableCell>
+                      <TableCell>{subjectDetails.semester || 'N/A'}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Link</TableCell>
+                      <TableCell>
+                        <a href={subjectDetails.link} target="_blank" rel="noopener noreferrer">
+                          {subjectDetails.link || 'N/A'}
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              ) : (
+                <Typography variant="span">Sem informações do request.</Typography>
+              )}
             </Box>
           </Collapse>
         </TableCell>
       </TableRow>
-    </React.Fragment>
-  );
-}
-
-Row.propTypes = {
-  row: PropTypes.shape({
-    codigo: PropTypes.string.isRequired,
-    nome: PropTypes.string.isRequired,
-    userEnvio: PropTypes.string.isRequired,
-    history: PropTypes.arrayOf(
-      PropTypes.shape({
-        professor: PropTypes.string.isRequired,
-        semestre: PropTypes.string.isRequired,
-        link: PropTypes.string.isRequired,
-        data: PropTypes.string.isRequired,
-      }),
-    ).isRequired,
-  }).isRequired,
-};
-
-const rows = [
-  createData('IMD0001', 'Desenvolvimento Web 1', 'UserAluno1'),
-  createData('IMD0002', 'Desenvolvimento Web 2', 'UserAluno2'),
-  createData('IMD0003', 'Matemática Elementar', 'UserAluno3'),
-  createData('IMD0004', 'Sistemas Operacionais', 'UserAluno4'),
-  createData('IMD0005', 'Banco de Dados', 'UserAluno5'),
-];
-
-export default function CardRequests() {
-  return (
-    <TableContainer component={Paper} sx={{ border: '1px solid #6899E6', boxShadow: 4, borderRadius: '10px' }}>
-      <Table aria-label="collapsible table">
-        <TableHead>
-          <TableRow>
-            <TableCell />
-            <TableCell>Código</TableCell>
-            <TableCell>Disciplina</TableCell>
-            <TableCell>Enviado por</TableCell>
-            <TableCell></TableCell>
-            <TableCell></TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row) => (
-            <Row key={row.nome} row={row} />
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    </>
   );
 }
