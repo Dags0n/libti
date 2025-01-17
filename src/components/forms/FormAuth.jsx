@@ -103,7 +103,7 @@ const handleSubmit = async (e, login, isLogin, navigate, location) => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3000/auth/login', {
+      const response = await axios.post('http://localhost:3005/auth/login', {
         email: username,
         password: password,
       });
@@ -129,7 +129,7 @@ const handleSubmit = async (e, login, isLogin, navigate, location) => {
     }
 
     try {
-      await axios.post('http://localhost:3000/users', {
+      await axios.post('http://localhost:3005/users', {
         name: name,
         email: username,
         password: password,

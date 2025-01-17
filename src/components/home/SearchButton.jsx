@@ -49,7 +49,7 @@ export default function SearchButton() {
 
   const fetchBooks = async (toggleValue, input) => {
     try {
-      const response = await axios.get(`http://localhost:3000/${toggleValue}/search/${input}`);
+      const response = await axios.get(`http://localhost:3005/${toggleValue}/search/${input}`);
       setResults(response.data);
     } catch (error) {
       console.error("Erro ao buscar livros:", error);

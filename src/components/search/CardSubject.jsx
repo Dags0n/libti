@@ -64,7 +64,7 @@ export default function CardSubject() {
   const query = filter ? `/search/${filter}` : "";
   
   useEffect(() => {
-    axios.get(`http://localhost:3000/subject${query}`).then((response) => {
+    axios.get(`http://localhost:3005/subject${query}`).then((response) => {
       setSubjects(response.data);
     });
   }, [filter, query]);

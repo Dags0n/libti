@@ -13,7 +13,7 @@ export default function BookCards() {
   const query = filter ? `/search/${filter}` : "";
   
   useEffect(() => {
-    axios.get(`http://localhost:3000/books${query}`).then((response) => {
+    axios.get(`http://localhost:3005/books${query}`).then((response) => {
       setBooks(response.data);
     });
   }, [filter, query]);
