@@ -107,13 +107,22 @@ const handleSubmit = async (e, typeForm, cookies) => {
     }
 
     try {
-      await axios.post('http://localhost:3005/upload-subjects', {
+      const uploadResponse = await axios.post('http://localhost:3005/upload-subjects', {
         name: disciplina,
         code: codigo,
         teacher: professor,
         semester: semestre,
         fileLink: linkArquivos,
         user: cookies.userId,
+      });
+
+      const user = await axios.get(`http://localhost:3005/users/${cookies.userId}`);
+      console.log(uploadResponse)
+
+      await axios.post('http://localhost:3005/requests-subjects', {
+        requester: user.data.id,
+        uploadSubject: uploadResponse.data.id,
+        status: 'pending',
       });
 
       e.target.reset();
@@ -148,10 +157,18 @@ const handleSubmit = async (e, typeForm, cookies) => {
     };
 
     try {
-      await axios.post('http://localhost:3005/upload-books', bookData, {
+      const uploadResponse = await axios.post('http://localhost:3005/upload-books', bookData, {
         headers: {
           'Content-Type': 'application/json',
         },
+      });
+
+      const user = await axios.get(`http://localhost:3005/users/${cookies.userId}`);
+
+      await axios.post('http://localhost:3005/requests-books', {
+        requester: user.data.id,
+        uploadBook: uploadResponse.data.id,
+        status: 'pending',
       });
 
       e.target.reset();
