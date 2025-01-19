@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { styled } from "@mui/material/styles";
 import { Box, Avatar, TextField, Button, InputAdornment } from "@mui/material";
 import { toast } from "react-toastify";
 import { Edit } from "@mui/icons-material";
+import axios from "axios";
+import { useCookies } from "react-cookie";
 
 const StyledForm = styled("form")(() => ({
   width: "100%",
@@ -40,30 +42,53 @@ const style = {
   mt: { xs: 2, sm: 5 },
 };
 
-const handleReport = (e) => {
-  e.preventDefault();
-  if (e.target.name.value === "" || e.target.email.value === "" || e.target.password.value === "") {
-    toast.warn("Preencha todos os campos!");
-  } else {
-    toast.success("Perfil alterado com Sucesso!");
-  }
-};
-
-
 export default function Profile() {
-  const [disabled, setDisabled] = React.useState({
-    email: true,
-    senha: true
-  });
+  const [cookies] = useCookies(["userId"]);
+  const [user, setUser] = useState({ name: "", email: "", password: "" });
+  const [password, setPassword] = useState("");
+  const [disabled, setDisabled] = useState({ email: true, senha: true });
 
-  const [values, setValues] = React.useState({
-    name: "Admin",
-    email: "admin@admin",
-  });
+  useEffect(() => {
+    const userId = cookies.userId;
+    if (userId) {
+      axios
+        .get(`http://localhost:3005/users/${userId}`)
+        .then((response) => {
+          setUser(response.data);
+        })
+        .catch(() => {
+          toast.error("Erro ao carregar os dados do usuário!");
+        });
+    }
+  }, [cookies]);
+
+  const handleReport = (e) => {
+    e.preventDefault();
+    const updatedUser = {
+      name: user.name,
+      email: user.email,
+    };
+
+    if (password) {
+      updatedUser.password = password;
+    }
+
+    const userId = cookies.userId;
+    if (userId) {
+      axios
+        .put(`http://localhost:3005/users/${userId}`, updatedUser)
+        .then(() => {
+          toast.success("Usuário alterado com sucesso!");
+        })
+        .catch(() => {
+          toast.error("Erro ao alterar o usuário!");
+        });
+    }
+  };
 
   const handleEdit = (field) => {
-    setDisabled({ ...disabled, [field]: !disabled[field] });
-  }
+    setDisabled((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
 
   return (
     <Box sx={style}>
@@ -104,21 +129,23 @@ export default function Profile() {
             label="Nome"
             variant="outlined"
             margin="normal"
-            value={values.name}
-            onChange={(e) => setValues({ ...values, name: e.target.value })}
+            value={user.name}
+            onChange={(e) => setUser({ ...user, name: e.target.value })}
           />
           <TextField
             id="email"
             label="Email"
             variant="outlined"
             margin="normal"
-            value={values.email}
+            value={user.email}
             disabled={disabled.email}
-            onChange={(e) => setValues({ ...values, email: e.target.value })}
-            slotProps={{
-              input: {
-                endAdornment: <InputAdornment position="end" sx={{ cursor: 'pointer' }} onClick={() => handleEdit('email')}><Edit /></InputAdornment>,
-              },
+            onChange={(e) => setUser({ ...user, email: e.target.value })}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end" sx={{ cursor: "pointer" }} onClick={() => handleEdit("email")}>
+                  <Edit />
+                </InputAdornment>
+              ),
             }}
           />
           <TextField
@@ -128,10 +155,13 @@ export default function Profile() {
             variant="outlined"
             margin="normal"
             disabled={disabled.senha}
-            slotProps={{
-              input: {
-                endAdornment: <InputAdornment position="end" sx={{ cursor: 'pointer' }} onClick={() => handleEdit('senha')}><Edit /></InputAdornment>,
-              },
+            onChange={(e) => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end" sx={{ cursor: "pointer" }} onClick={() => handleEdit("senha")}>
+                  <Edit />
+                </InputAdornment>
+              ),
             }}
           />
           <Button
