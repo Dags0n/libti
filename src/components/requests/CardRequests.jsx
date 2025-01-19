@@ -157,7 +157,7 @@ function Row({ request, onAccept, onReject }) {
                     </TableRow>
                     <TableRow>
                       <TableCell>Professor</TableCell>
-                      <TableCell>{uploadSubject.professor || 'N/A'}</TableCell>
+                      <TableCell>{uploadSubject.teacher || 'N/A'}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Semestre</TableCell>
@@ -166,8 +166,8 @@ function Row({ request, onAccept, onReject }) {
                     <TableRow>
                       <TableCell>Link</TableCell>
                       <TableCell>
-                        <a href={uploadSubject.link} target="_blank" rel="noopener noreferrer">
-                          {uploadSubject.link || 'N/A'}
+                        <a href={uploadSubject.fileLink} target="_blank" rel="noopener noreferrer">
+                          {uploadSubject.fileLink || 'N/A'}
                         </a>
                       </TableCell>
                     </TableRow>
