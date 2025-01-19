@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { styled, Grid2 as Grid, Typography, TextField } from '@mui/material';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios';
 
 const StyledTypography = styled(Typography)(({ theme }) => ({
   fontFamily: 'Roboto',
@@ -71,14 +72,39 @@ const StyledButton = styled('button')(({ theme }) => ({
 }));
 
 export default function FormContact() {
+  const [loading, setLoading] = useState(false);
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!event.target.name.value || !event.target.email.value || !event.target.subject.value || !event.target.message.value) {
+    const name = event.target.name.value
+    const email = event.target.email.value;
+    const subject = event.target.subject.value;
+    const message = event.target.message.value;
+
+    if (!name || !email || !subject || !message) {
       toast.warn('Preencha todos os campos!');
       return;
     }
-    toast.success('Mensagem enviada com sucesso!');
+    
+    const data = {
+      name: name,
+      email: email,
+      subject: subject,
+      text: message,
+    };
+
+    try {
+      setLoading(true);
+      axios.post('http://localhost:3005/email/send', data);
+      toast.success('Mensagem enviada com sucesso!');
+      event.target.reset();
+    } catch (error) {
+      console.error('Erro ao enviar a mensagem:', error);
+      toast.error('Erro ao enviar a mensagem.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -127,7 +153,7 @@ export default function FormContact() {
               />
             </Grid>
           </Grid>
-          <StyledButton type='submit'>Enviar mensagem</StyledButton>
+          <StyledButton type='submit' disabled={loading}>{loading ? 'Enviando...' : 'Enviar mensagem'}</StyledButton>
         </StyledForm>
       </Grid>
     </Grid>
