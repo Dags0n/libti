@@ -7,6 +7,8 @@ import { TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import CloseIcon from "@mui/icons-material/Close";
 import { toast } from "react-toastify";
+import axios from "axios";
+import { useCookies } from "react-cookie";
 
 const style = {
   position: "absolute",
@@ -48,14 +50,31 @@ const StyledForm = styled("form")(() => ({
 }));
 
 export default function TopicModal({ open, handleClose }) {
+  const [cookies] = useCookies(["userId"]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (e.target.title.value || e.target.content.value) {
-      toast.success("Tópico criado com sucesso!");
-      handleClose();
-    } else {
-      toast.warn("Preencha todos os campos!");
+    
+    if (!e.target.title.value.trim() || !e.target.content.value.trim()) {
+      toast.warn("Preencha todos os campos");
+      return;
     }
+
+    const data = {
+      title: e.target.title.value,
+      text: e.target.content.value,
+      user: cookies.userId,
+    };
+
+    axios
+      .post("http://localhost:3005/posts", data)
+      .then(() => {
+        toast.success("Tópico criado com sucesso");
+        handleClose();
+      })
+      .catch(() => {
+        toast.error("Erro ao criar tópico");
+      });
   };
 
   return (

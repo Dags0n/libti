@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Typography,
@@ -18,34 +18,11 @@ import Avatar from "@mui/material/Avatar";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { toast } from "react-toastify";
 import TopicModal from "../../components/forum/TopicModal";
+import axios from "axios";
+import { useCookies } from "react-cookie";
 
 const defaultAvatar =
   "https://super.abril.com.br/wp-content/uploads/2018/07/5281183b865be245b1000225gorila.jpeg?quality=70&w=720&crop=1";
-
-const initialPosts = [
-  {
-    id: 1,
-    text: "Alguém tem disponível o livro de vga? Aquele do Jacir Venturi",
-    date: "07/04/2025 21:37",
-    comments: [],
-    votes: 1,
-  },
-  {
-    id: 2,
-    text: "Se alguém tiver algum material de desenvolvimento web 1, se puder disponibilizar aqui fico agradecida!!",
-    date: "21/03/2025 08:41",
-    comments: [{ text: "Tenho um material bom, vou enviar!" }],
-    votes: 4,
-  },
-];
-
-const Users = [
-  {
-    id: 1,
-    name: "João",
-    date: "07/04/2025 21:37",
-  },
-];
 
 const ButtonNewTopic = styled("div")(() => ({
   display: "flex",
@@ -67,29 +44,76 @@ const ButtonNewTopic = styled("div")(() => ({
 
 export default function Forum() {
   const [open, setOpen] = useState(false);
-  const [posts, setPosts] = useState(initialPosts);
+  const [posts, setPosts] = useState([]);
   const [currentVisibleComment, setCurrentVisibleComment] = useState(null);
   const [currentVisibleText, setCurrentVisibleText] = useState(null);
+  const [cookies] = useCookies(["userId"]);
+
+  useEffect(() => {
+    axios.get("http://localhost:3005/posts").then((response) => {
+      const postsWithCommentsPromises = response.data.map((post) => {
+        return axios
+          .get(`http://localhost:3005/posts/${post.id}/comments`)
+          .then((commentResponse) => {
+            const commentsWithUserNames = commentResponse.data.map((comment) => {
+              return axios
+                .get(`http://localhost:3005/users/${comment.userId}`)
+                .then((userResponse) => {
+                  comment.userName = userResponse.data.name;
+                  return comment;
+                })
+                .catch((err) => {
+                  console.error("Erro ao carregar o nome do usuário:", err);
+                  return comment;
+                });
+            });
+  
+            return Promise.all(commentsWithUserNames).then((updatedComments) => {
+              post.comments = updatedComments;
+              return post;
+            });
+          })
+          .catch((err) => {
+            console.error("Erro ao carregar comentários:", err);
+            return post;
+          });
+      });
+  
+      Promise.all(postsWithCommentsPromises)
+        .then((postsWithComments) => {
+          setPosts(postsWithComments);
+        })
+        .catch((err) => {
+          console.error("Erro ao carregar posts e comentários:", err);
+        });
+    });
+  }, [posts]);
 
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const handleUpvote = (id) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === id ? { ...post, votes: post.votes + 1 } : post
-      )
-    );
+  const handleUpvote = async (id) => {
+    try {
+      await axios.post(`http://localhost:3005/posts/${id}/votes`, {
+        userId: cookies.userId,
+      });
+      toast.success("Voto cadastrado com sucesso");
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Erro ao votar";
+      toast.error(errorMessage);
+    }
   };
-
-  const handleDownvote = (id) => {
-    setPosts((prevPosts) =>
-      prevPosts.map((post) =>
-        post.id === id && post.votes > 0
-          ? { ...post, votes: post.votes - 1 }
-          : post
-      )
-    );
+  
+  const handleDownvote = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3005/posts/${id}/votes/${cookies.userId}`, {
+        userId: cookies.userId,
+      });
+      toast.success("Voto removido com sucesso");
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Erro ao votar";
+      toast.error(errorMessage);
+    }
   };
 
   const handleComentShow = (id) => {
@@ -100,14 +124,22 @@ export default function Forum() {
     setCurrentVisibleText(currentVisibleText === id ? null : id);
   };
 
-  const handleReport = (event) => {
+  const handleReport = (event, postId) => {
     event.preventDefault();
     const comment = event.target.elements.comment.value.trim();
     if (!comment) {
       toast.warn("Comentário vazio");
     } else {
-      toast.success("Comentário enviado com sucesso");
-      event.target.elements.comment.value = "";
+      try {
+        axios.post(`http://localhost:3005/posts/${postId}/comments`, { 
+          text: comment,
+          userId: cookies.userId,
+        });
+        toast.success("Comentário enviado com sucesso");
+        event.target.elements.comment.value = "";
+      } catch (error) {
+        toast.error("Erro ao enviar comentário");
+      }
     }
   };
 
@@ -173,7 +205,7 @@ export default function Forum() {
                   <IconButton onClick={() => handleTextShow(post.id)}>
                     <ChatBubbleOutlineIcon color="primary" />
                     <Typography variant="body2" color="primary">
-                      {post.comments.length}
+                      {Array.isArray(post.comments) ? post.comments.length : 0}
                     </Typography>
                   </IconButton>
                   <IconButton>
@@ -196,7 +228,7 @@ export default function Forum() {
               </IconButton>
             </Box>
             <Box>
-              {currentVisibleComment === post.id && post.comments.length > 0 &&
+              {currentVisibleComment === post.id && Array.isArray(post.comments) && post.comments.length > 0 &&
                 post.comments.map((comment, index) => (
                   <Box
                     key={index}
@@ -225,7 +257,7 @@ export default function Forum() {
                           fontWeight: "bold",
                         }}
                       >
-                        {Users.find((user) => user.id === 1).name}
+                        {comment.userName}
                       </Typography>
                     </Box>
                     <Box mt={1} ml={2}>
@@ -248,7 +280,7 @@ export default function Forum() {
                     boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)",
                   }}
                 >
-                  <form onSubmit={handleReport}>
+                  <form onSubmit={(e) => handleReport(e, post.id)}>
                     <TextField
                       id="comment"
                       fullWidth
